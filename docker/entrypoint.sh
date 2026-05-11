@@ -1,10 +1,6 @@
 #!/bin/bash
 # Docker/Podman entrypoint: bootstrap config files into the mounted volume, then run hermes.
 set -e
-# Capture all output to a log file on the volume for Railway debugging
-mkdir -p /opt/data 2>/dev/null || true
-exec > >(tee -a /opt/data/entrypoint.log) 2>&1
-echo "[entrypoint] $(date -u) starting as uid=$(id -u) gid=$(id -g) args=$*"
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
 INSTALL_DIR="/opt/hermes"
