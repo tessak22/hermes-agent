@@ -10,6 +10,12 @@ INSTALL_DIR="/opt/hermes"
 # optionally remap the hermes user/group to match host-side ownership, fix volume
 # permissions, then re-exec as hermes.
 if [ "$(id -u)" = "0" ]; then
+    # Clear stale gateway lock files left by previous containers on Railway.
+    # Must run as root before the privilege drop so it works regardless of
+    # volume ownership. New containers always have a process at the locked PID
+    # (kernel threads), which causes the gateway to refuse to start.
+    rm -f "${HERMES_HOME}/gateway.lock" "${HERMES_HOME}/gateway.pid" 2>/dev/null || true
+
     if [ -n "$HERMES_UID" ] && [ "$HERMES_UID" != "$(id -u hermes)" ]; then
         echo "Changing hermes UID to $HERMES_UID"
         usermod -u "$HERMES_UID" hermes
@@ -59,10 +65,6 @@ source "${INSTALL_DIR}/.venv/bin/activate"
 
 # Clear stale gateway lock file left by previous container restarts.
 # On Railway, the shared volume persists lock files across container lifetimes
-# and new containers always have a process at the locked PID (kernel threads),
-# so the gateway refuses to start without this cleanup.
-rm -f "$HERMES_HOME/gateway.lock" "$HERMES_HOME/gateway.pid"
-
 # Create essential directory structure.  Cache and platform directories
 # (cache/images, cache/audio, platforms/whatsapp, etc.) are created on
 # demand by the application — don't pre-create them here so new installs
