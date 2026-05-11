@@ -61,6 +61,12 @@ fi
 # --- Running as hermes from here ---
 source "${INSTALL_DIR}/.venv/bin/activate"
 
+# Clear stale gateway lock file left by previous container restarts.
+# On Railway, the shared volume persists lock files across container lifetimes
+# and new containers always have a process at the locked PID (kernel threads),
+# so the gateway refuses to start without this cleanup.
+rm -f "$HERMES_HOME/gateway.lock" "$HERMES_HOME/gateway.pid"
+
 # Create essential directory structure.  Cache and platform directories
 # (cache/images, cache/audio, platforms/whatsapp, etc.) are created on
 # demand by the application — don't pre-create them here so new installs
